@@ -129,7 +129,7 @@ class MangaChapterBatoto(MangaChapter):
         ## Get @src attribute of element at //*[@id="comic_page"]
         webpage = readHTML(page_url)
         img_url = webpage.xpath('//*[@id="comic_page"]')[0].get('src')
-        downloadImage(img_url, page_file_path + urlparse.urlparse(img_url).path.split('.')[-1])
+        downloadImage(img_url, page_file_path + "." + urlparse.urlparse(img_url).path.split('.')[-1])
 
 ## Generic class representing a manga
 class Manga(object):
