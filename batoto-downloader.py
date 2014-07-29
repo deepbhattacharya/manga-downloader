@@ -139,7 +139,7 @@ class Manga(object):
 
     def addMangaChapter(self, manga_chapter):
         self.chapter_list.append(manga_chapter)
-        if __TESTING__:
+        if __TEST__:
             print "Added chapter"
 
     def retrieveAllChapters(self):
@@ -197,10 +197,10 @@ else:
 manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
 for chapter in manga.chapter_list:
-    if __TESTING__:
+    if __TEST__:
         chapter.show() # For testing only
         print "Downloading chapter..."
     chapter.downloadChapter()
-    if __TESTING__:
+    if __TEST__:
         print "Done"
 print "All done!"
