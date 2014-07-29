@@ -15,7 +15,7 @@ python batoto-downloader-python.py
 This then asks for the Batoto URL. Simply put in the URL to the main
 page *for the manga*.
 
-Example input: http://www.batoto.net/comic/\_/all-you-need-is-kill-r10854
+Example input: http://www.batoto.net/comic/_/all-you-need-is-kill-r10854
 
 The script then starts running and creates a folder in your working
 directory named like: "Batoto
