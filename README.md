@@ -10,6 +10,7 @@ You need the following python packages installed in your environment
 
 You run the script like this:
 python batoto-downloader-python.py
+
 \[python exe path, systemic or virtual environment\] \[script path\]
 
 This then asks for the Batoto URL. Simply put in the URL to the main
