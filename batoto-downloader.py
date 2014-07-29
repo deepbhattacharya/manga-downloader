@@ -25,14 +25,13 @@ import os
 import zipfile
 import urlparse
 
-## MANGA_URI = 'http://www.batoto.net/comic/_/comics/save-the-world-in-80-days-r12245'
-## MANGA_URI = 'http://www.batoto.net/comic/_/comics/tokyo-ghoul-r3056'
-## MANGA_URI = 'http://www.batoto.net/comic/_/comics/nonscale-r12295'
-
 ## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
 CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\.\s*([0-9]+)\s.+'
-CHAPTER_TITLE_PATTERN_WITH_VOLUME = "Vol.\s*([0-9]+)\s*Ch.\s*([0-9\.v]+):?\s+(.+)"
-CHAPTER_TITLE_PATTERN_NO_VOLUME = "Ch.\s*([0-9\.v]+):?\s+(.+)"
+CHAPTER_TITLE_PATTERN_WITH_VOLUME = "Vol.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
+CHAPTER_TITLE_PATTERN_NO_VOLUME = "Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
+
+## Constants
+__TEST__ = False
 
 ## Function to compress a directory
 def zipdir(path, zip):
@@ -140,7 +139,8 @@ class Manga(object):
 
     def addMangaChapter(self, manga_chapter):
         self.chapter_list.append(manga_chapter)
-        print "Added chapter"
+        if __TESTING__:
+            print "Added chapter"
 
     def retrieveAllChapters(self):
         raise NotImplementedError # To be overridden in subclasses
@@ -197,8 +197,10 @@ else:
 manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
 for chapter in manga.chapter_list:
-    chapter.show() # For testing only
-    print "Downloading chapter..."
+    if __TESTING__:
+        chapter.show() # For testing only
+        print "Downloading chapter..."
     chapter.downloadChapter()
-    print "Done"
+    if __TESTING__:
+        print "Done"
 print "All done!"
