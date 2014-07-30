@@ -27,6 +27,7 @@ import urlparse
 
 ## Constants
 __TEST__ = False
+__RETRY_URL__ = 5
 
 ## Function to compress a directory
 def zipdir(path, zip):
@@ -38,13 +39,17 @@ def zipdir(path, zip):
 def readURL(url):
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
-    response = urllib2.urlopen(request)
-    if response.info().get('Content-Encoding') == 'gzip': # Large pages are often gzipped
-        buf = StringIO(response.read())
-        data = gzip.GzipFile(fileobj=buf)
-    else:
-        data = response
-    return data
+    for i in range(1, __RETRY_URL__):
+        try:
+            response = urllib2.urlopen(request)
+            if response.info().get('Content-Encoding') == 'gzip': # Large pages are often gzipped
+                buf = StringIO(response.read())
+                data = gzip.GzipFile(fileobj=buf)
+            else:
+                data = response
+            return data
+        except:
+            pass
 
 ## Function to retrieve and parse an HTML page
 def readHTML(url):
