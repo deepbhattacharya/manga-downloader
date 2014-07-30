@@ -113,7 +113,7 @@ class MangaChapter(object):
         self.retrieveAllPages()
         for page_url in self.page_list:
             self.page_num = self.page_num + 1
-            page_path = os.path.join(dir_path, self.prefix + " - p" + str(self.page_num).zfill(3))
+            page_path = os.path.join(dir_path, "p" + str(self.page_num).zfill(3))
             self.downloadPage(page_url, page_path)
         zipf = zipfile.ZipFile(zip_path, "w")
         zipdir(dir_path, zipf)
@@ -177,7 +177,7 @@ class MangaBatoto(Manga):
             if ch_row.get('class') == 'row lang_English chapter_row':
                 ch_a = ch_row.xpath('.//td')[0].xpath('.//a')[0]
                 ch_url = ch_a.get('href')
-                ch_name = ch_a.text_content().strip(' \t\n\r')
+                ch_name = ch_a.text_content().strip(' \t\n\r').translate(None, '\\/')
                 vol_no = None
                 ch_no = None
                 ch_title = None
@@ -192,7 +192,7 @@ class MangaBatoto(Manga):
                     ch_title = m.group(2)
                 assert(ch_no is not None) # Chapter number is mandatory
                 gr_a = ch_row.xpath('.//td')[2].xpath('.//a')[0]
-                gr_name = gr_a.text.strip(' \t\n\r')
+                gr_name = gr_a.text.strip(' \t\n\r').translate(None, '\\/')
                 self.addMangaChapter(MangaChapterBatoto(self.name, ch_no, ch_url, ch_path, ch_title, vol_no, gr_name))
 
 # Data structures that help instantiating the right subclasses based on URL
