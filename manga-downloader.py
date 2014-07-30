@@ -33,7 +33,7 @@ __RETRY_URL__ = 5
 def zipdir(path, zip):
     for root, dirs, files in os.walk(path):
         for file in files:
-            zip.write(os.path.join(root, file))
+            zip.write(os.path.join(root, file), arcname = os.path.basename(file))
 
 ## Function to get a webpage
 def readURL(url):
