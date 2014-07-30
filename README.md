@@ -1,20 +1,20 @@
-batoto-downloader-python
-========================
+manga-downloader
+=================
 
-A python script to download manga chapters from Batoto.net.
+A python script to download manga chapters from various collection sites
+e.g. Batoto.net.
 
 You need the following python packages installed in your environment
 (presumably through pip):
-
 1. lxml
 
 You run the script like this:
-python batoto-downloader-python.py
+python manga-downloader.py
 
 \[python exe path, systemic or virtual environment\] \[script path\]
 
-This then asks for the Batoto URL. Simply put in the URL to the main
-page *for the manga*.
+This then asks for the URL. Simply put in the URL to the main
+page *for the manga*, in a supported site (e.g. Batoto.net).
 
 Example input: http://www.batoto.net/comic/_/all-you-need-is-kill-r10854
 
@@ -23,8 +23,13 @@ directory named like: "Batoto
 \- \[manga name\]". The chapters are created as compressed ZIP archives
 within this folder.
 
+*Currently Supported Sites:*
+1. Batoto
+
 *Wishlist:*
 - Volume-based archiving when volume is known
 - ZIP/RAR/CBZ/CBR options
 - Batoto search function based on manga name
 - Other sites?
+- Downloading from last chapter
+- Chapter min/max bounds for downloading
