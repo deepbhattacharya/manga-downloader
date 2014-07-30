@@ -202,11 +202,15 @@ MANGA_CHAPTER_TYPES = {'BATOTO' : MangaChapterBatoto,
 MANGA_TYPES = {'BATOTO' : MangaBatoto,
                 'OTHER' : Manga}
 
-uri = raw_input("Enter Batoto URL: ")
+uri = raw_input("Enter URL: ")
 if re.compile('(http://)?www\.batoto\.net.+-r[0-9]+').match(uri):
     URI_TYPE = 'BATOTO'
+    print "Site supported: Batoto.net"
 else:
     URI_TYPE = 'OTHER'
+    print "URL not supported or unknown"
+    exit(1)
+
 manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
 for chapter in manga.chapter_list:
@@ -217,3 +221,4 @@ for chapter in manga.chapter_list:
     if __TEST__:
         print "Done"
 print "All done!"
+exit(0)
