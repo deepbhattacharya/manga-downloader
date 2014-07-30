@@ -25,11 +25,6 @@ import os
 import zipfile
 import urlparse
 
-## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
-CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\.\s*([0-9]+)\s.+'
-CHAPTER_TITLE_PATTERN_WITH_VOLUME = "Vol.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
-CHAPTER_TITLE_PATTERN_NO_VOLUME = "Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
-
 ## Constants
 __TEST__ = False
 
@@ -97,16 +92,25 @@ class MangaChapter(object):
         raise NotImplementedError # To be overridden in subclasses
 
     def downloadChapter(self):
-        dir = os.path.join(self.chapter_root_path, self.prefix)
-        if os.path.exists(dir):
-            shutil.rmtree(dir)
-        os.makedirs(dir)
+        dir_path = os.path.join(self.chapter_root_path, self.prefix)
+        zip_path = dir_path + ".zip"
+        if os.path.exists(zip_path):
+            zipf = zipfile.ZipFile(zip_path)
+            if zipf.testzip() is None:
+                if __TEST__:
+                    print "Skipping chapter " + self.chapter_number
+                return
+            else:
+                os.remove(zip_path)
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
+        os.makedirs(dir_path)
         self.retrieveAllPages()
         for page_url in self.page_list:
             self.page_num = self.page_num + 1
-            page_path = os.path.join(dir, self.prefix + " - p" + str(self.page_num).zfill(3))
+            page_path = os.path.join(dir_path, self.prefix + " - p" + str(self.page_num).zfill(3))
             self.downloadPage(page_url, page_path)
-        zipf = zipfile.ZipFile(dir + ".zip", "w")
+        zipf = zipfile.ZipFile(zip_path, "w")
         zipdir(dir, zipf)
         zipf.close()
         shutil.rmtree(dir)
@@ -149,6 +153,10 @@ class Manga(object):
 class MangaBatoto(Manga):
     def __init__(self, manga_url, manga_name=None):
         super(MangaBatoto, self).__init__(manga_url, manga_name)
+        ## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
+        self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\.\s*([0-9]+)\s.+'
+        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = "Vol.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
+        self.CHAPTER_TITLE_PATTERN_NO_VOLUME = "Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
 
     def retrieveAllChapters(self):
         webpage = readHTML(self.url)
@@ -168,13 +176,13 @@ class MangaBatoto(Manga):
                 vol_no = None
                 ch_no = None
                 ch_title = None
-                if re.match(CHAPTER_TITLE_PATTERN_CHECK_VOLUME, ch_name):
-                    m = re.match(CHAPTER_TITLE_PATTERN_WITH_VOLUME, ch_name)
+                if re.match(self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME, ch_name):
+                    m = re.match(self.CHAPTER_TITLE_PATTERN_WITH_VOLUME, ch_name)
                     vol_no = m.group(1)
                     ch_no = m.group(2)
                     ch_title = m.group(3)
                 else:
-                    m = re.match(CHAPTER_TITLE_PATTERN_NO_VOLUME, ch_name)
+                    m = re.match(self.CHAPTER_TITLE_PATTERN_NO_VOLUME, ch_name)
                     ch_no = m.group(1)
                     ch_title = m.group(2)
                 assert(ch_no is not None) # Chapter number is mandatory
