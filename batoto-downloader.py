@@ -116,9 +116,9 @@ class MangaChapter(object):
             page_path = os.path.join(dir_path, self.prefix + " - p" + str(self.page_num).zfill(3))
             self.downloadPage(page_url, page_path)
         zipf = zipfile.ZipFile(zip_path, "w")
-        zipdir(dir, zipf)
+        zipdir(dir_path, zipf)
         zipf.close()
-        shutil.rmtree(dir)
+        shutil.rmtree(dir_path)
 
 ## Subclass representing a manga chapter from Batoto
 class MangaChapterBatoto(MangaChapter):
