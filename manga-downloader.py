@@ -22,6 +22,7 @@ from StringIO import StringIO
 import gzip
 import shutil
 import os
+import sys
 import zipfile
 import urlparse
 
@@ -213,12 +214,16 @@ else:
 
 manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
+chapter_count = len(manga.chapter_list)
+curr_download_count = 0
+print "Downloaded 0/" + chapter_count + " chapters."
 for chapter in manga.chapter_list:
+    curr_download_count = curr_download_count + 1
     if __TEST__:
         chapter.show() # For testing only
         print "Downloading chapter..."
     chapter.downloadChapter()
-    if __TEST__:
-        print "Done"
+    sys.stdout.write("\rDownloaded " + curr_download_count + "/" + chapter_count + " chapters.")
+    sys.stdout.flush()
 print "All done!"
 exit(0)
