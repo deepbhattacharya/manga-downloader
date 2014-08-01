@@ -216,14 +216,14 @@ manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
 chapter_count = len(manga.chapter_list)
 curr_download_count = 0
-print "Downloaded 0/" + chapter_count + " chapters."
+print "Downloaded 0/" + str(chapter_count) + " chapters."
 for chapter in manga.chapter_list:
     curr_download_count = curr_download_count + 1
     if __TEST__:
         chapter.show() # For testing only
         print "Downloading chapter..."
     chapter.downloadChapter()
-    sys.stdout.write("\rDownloaded " + curr_download_count + "/" + chapter_count + " chapters.")
+    sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
     sys.stdout.flush()
 print "All done!"
 exit(0)
