@@ -224,5 +224,5 @@ for chapter in manga.chapter_list:
     chapter.downloadChapter()
     sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
     sys.stdout.flush()
-print "All done!"
+print "\nAll done!"
 exit(0)
