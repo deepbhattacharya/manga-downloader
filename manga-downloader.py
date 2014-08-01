@@ -28,7 +28,7 @@ import urlparse
 
 ## Constants
 __DOWNLOAD__ = True
-__TEST__ = False
+__TEST__ = True # False
 __RETRY_URL__ = 5
 
 ## Function to compress a directory
@@ -41,6 +41,8 @@ def zipdir(path, zip):
 def readURL(url):
     if url[0] == '/':
         url = uri_type + url
+    if __TEST__:
+        print "Reading url: " + url
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
     for i in range(1, __RETRY_URL__):
@@ -145,8 +147,8 @@ class MangaChapterBatoto(MangaChapter):
 
 ## Subclass representing a manga chapter from Starkana
 class MangaChapterStarkana(MangaChapter):
-    def __init__(self, manga_name, chapter_number, chapter_url, chapter_root_path, chapter_title=None, volume_number=None, group_name=None):
-        super(MangaChapterStarkana, self).__init__(manga_name, chapter_number, chapter_url, chapter_root_path, chapter_title, volume_number, group_name)
+    def __init__(self, manga_name, chapter_number, chapter_url, chapter_root_path):
+        super(MangaChapterStarkana, self).__init__(manga_name, chapter_number, chapter_url, chapter_root_path)
 
     def retrieveAllPages(self):
         ## Look at the options of select element at //*[@id="page_select"]
@@ -229,7 +231,10 @@ class MangaStarkana(Manga):
         webpage = readHTML(self.url)
         ## print tostring(page) # For testing only
         if self.name is None:
-            self.name = webpage.xpath('//meta[@property="og:title"]/@content')[0].strip()
+            if webpage.xpath('//meta[@property="og:title"]'):
+                self.name = webpage.xpath('//meta[@property="og:title"]/@content')[0].strip()
+            else:
+                self.name = self.url.split('/')[-1].replace('_', ' ')
             print "Set name to: " + self.name
         assert(self.name is not None)
         ch_path = "Starkana - " + self.name
@@ -243,8 +248,8 @@ class MangaStarkana(Manga):
             self.addMangaChapter(MangaChapterStarkana(self.name, ch_no, ch_url, ch_path))
 
 # Data structures that help instantiating the right subclasses based on URL
-URI_TYPES = {'www.batoto.net' : {'uri' : '(http://)?www\.batoto\.net.+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
-                'www.starkana.com' : {'uri' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
+URI_TYPES = {'http://www.batoto.net' : {'uri' : '(http://)?www\.batoto\.net.+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
+            'http://www.starkana.com' : {'uri' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
                 }
 
 uri = raw_input("Enter URL: ")
