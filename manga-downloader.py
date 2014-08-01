@@ -178,7 +178,7 @@ class MangaBatoto(Manga):
             if ch_row.get('class') == 'row lang_English chapter_row':
                 ch_a = ch_row.xpath('.//td')[0].xpath('.//a')[0]
                 ch_url = ch_a.get('href')
-                ch_name = ch_a.text_content().strip(' \t\n\r').translate(None, '\\/')
+                ch_name = unicode(ch_a.text_content().strip(' \t\n\r')).translate(dict.fromkeys(map(ord, '\\/'), None))
                 vol_no = None
                 ch_no = None
                 ch_title = None
@@ -193,7 +193,7 @@ class MangaBatoto(Manga):
                     ch_title = m.group(2)
                 assert(ch_no is not None) # Chapter number is mandatory
                 gr_a = ch_row.xpath('.//td')[2].xpath('.//a')[0]
-                gr_name = gr_a.text.strip(' \t\n\r').translate(None, '\\/')
+                gr_name = unicode(gr_a.text.strip(' \t\n\r')).translate(dict.fromkeys(map(ord, '\\/'), None))
                 self.addMangaChapter(MangaChapterBatoto(self.name, ch_no, ch_url, ch_path, ch_title, vol_no, gr_name))
 
 # Data structures that help instantiating the right subclasses based on URL
