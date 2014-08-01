@@ -28,7 +28,7 @@ import urlparse
 
 ## Constants
 __DOWNLOAD__ = True
-__TEST__ = True # False
+__TEST__ = False
 __RETRY_URL__ = 5
 
 ## Function to compress a directory
