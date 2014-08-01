@@ -20,11 +20,14 @@ Example input: http://www.batoto.net/comic/_/all-you-need-is-kill-r10854
 
 The script then starts running and creates a folder in your working
 directory named like: "Batoto
-\- \[manga name\]". The chapters are created as compressed ZIP archives
+\- \[manga name\]". The folder name prefix denotes the site where the
+manga is downloaded from. The chapters are created as compressed ZIP archives
 within this folder.
 
 *Currently Supported Sites:*
+
 1. Batoto
+2. Starkana
 
 *Wishlist:*
 - Volume-based archiving when volume is known

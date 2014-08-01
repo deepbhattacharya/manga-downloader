@@ -39,6 +39,8 @@ def zipdir(path, zip):
 
 ## Function to get a webpage
 def readURL(url):
+    if url[0] == '/':
+        url = uri_type + url
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
     for i in range(1, __RETRY_URL__):
@@ -141,6 +143,25 @@ class MangaChapterBatoto(MangaChapter):
         img_url = webpage.xpath('//*[@id="comic_page"]')[0].get('src')
         downloadImage(img_url, page_file_path + "." + urlparse.urlparse(img_url).path.split('.')[-1])
 
+## Subclass representing a manga chapter from Starkana
+class MangaChapterStarkana(MangaChapter):
+    def __init__(self, manga_name, chapter_number, chapter_url, chapter_root_path, chapter_title=None, volume_number=None, group_name=None):
+        super(MangaChapterStarkana, self).__init__(manga_name, chapter_number, chapter_url, chapter_root_path, chapter_title, volume_number, group_name)
+
+    def retrieveAllPages(self):
+        ## Look at the options of select element at //*[@id="page_select"]
+        ## Take the value for each (page URI) and save them
+        webpage = readHTML(self.chapter_url)
+        s = webpage.xpath("//*[@id='page_switch']")[0]
+        for option in s.xpath('.//option[@value]'):
+            self.addPage(option.get('value'))
+
+    def downloadPage(self, page_url, page_file_path):
+        ## Get @src attribute of element at //*[@id="comic_page"]
+        webpage = readHTML(page_url)
+        img_url = webpage.xpath('//*[@id="pic"]/div/img')[0].get('src')
+        downloadImage(img_url, page_file_path + "." + urlparse.urlparse(img_url).path.split('.')[-1])
+
 ## Generic class representing a manga
 class Manga(object):
     def __init__(self, manga_url, manga_name=None):
@@ -199,23 +220,45 @@ class MangaBatoto(Manga):
                 gr_name = unicode(gr_a.text.strip(' \t\n\r')).translate(dict.fromkeys(map(ord, '\\/'), None))
                 self.addMangaChapter(MangaChapterBatoto(self.name, ch_no, ch_url, ch_path, ch_title, vol_no, gr_name))
 
+## Subclass representing a manga hosted in Starkana
+class MangaStarkana(Manga):
+    def __init__(self, manga_url, manga_name=None):
+        super(MangaStarkana, self).__init__(manga_url, manga_name)
+
+    def retrieveAllChapters(self):
+        webpage = readHTML(self.url)
+        ## print tostring(page) # For testing only
+        if self.name is None:
+            self.name = webpage.xpath('//meta[@property="og:title"]/@content')[0].strip()
+            print "Set name to: " + self.name
+        assert(self.name is not None)
+        ch_path = "Starkana - " + self.name
+        if not os.path.exists(ch_path):
+            os.makedirs(ch_path)
+        for ch_row in webpage.xpath('//a[@class="download-link"]'):
+            ch_no = None
+            ch_url = ch_row.get('href')
+            ch_no = ch_url.split('/')[-1]
+            assert(ch_no is not None)
+            self.addMangaChapter(MangaChapterStarkana(self.name, ch_no, ch_url, ch_path))
+
 # Data structures that help instantiating the right subclasses based on URL
-URI_TYPES = ['BATOTO', 'OTHER']
-MANGA_CHAPTER_TYPES = {'BATOTO' : MangaChapterBatoto,
-                        'OTHER' : MangaChapter}
-MANGA_TYPES = {'BATOTO' : MangaBatoto,
-                'OTHER' : Manga}
+URI_TYPES = {'www.batoto.net' : {'uri' : '(http://)?www\.batoto\.net.+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
+                'www.starkana.com' : {'uri' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
+                }
 
 uri = raw_input("Enter URL: ")
-if re.compile('(http://)?www\.batoto\.net.+-r[0-9]+').match(uri):
-    URI_TYPE = 'BATOTO'
-    print "Site supported: Batoto.net"
-else:
-    URI_TYPE = 'OTHER'
+url_ok = False
+for uri_type in URI_TYPES:
+    if re.compile(URI_TYPES[uri_type]['uri']).match(uri):
+        print "Site supported: " + uri_type
+        url_ok = True
+        break
+if not url_ok:
     print "URL not supported or unknown"
     exit(1)
 
-manga = MANGA_TYPES[URI_TYPE](uri) # Instantiate manga object
+manga = URI_TYPES[uri_type]['manga'](uri) # Instantiate manga object
 manga.retrieveAllChapters() # Add all chapters to it
 chapter_count = len(manga.chapter_list)
 curr_download_count = 0
