@@ -27,6 +27,7 @@ import zipfile
 import urlparse
 
 ## Constants
+__DOWNLOAD__ = True
 __TEST__ = False
 __RETRY_URL__ = 5
 
@@ -160,9 +161,9 @@ class MangaBatoto(Manga):
     def __init__(self, manga_url, manga_name=None):
         super(MangaBatoto, self).__init__(manga_url, manga_name)
         ## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
-        self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\.\s*([0-9]+)\s.+'
-        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = "Vol.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
-        self.CHAPTER_TITLE_PATTERN_NO_VOLUME = "Ch.\s*([0-9\.vA-Za-z]+):?\s+(.+)"
+        self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\..+'
+        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = '^Vol\.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z-]+):?\s+(.+)'
+        self.CHAPTER_TITLE_PATTERN_NO_VOLUME = '^Ch.\s*([0-9\.vA-Za-z-]+):?\s+(.+)'
 
     def retrieveAllChapters(self):
         webpage = readHTML(self.url)
@@ -179,6 +180,8 @@ class MangaBatoto(Manga):
                 ch_a = ch_row.xpath('.//td')[0].xpath('.//a')[0]
                 ch_url = ch_a.get('href')
                 ch_name = unicode(ch_a.text_content().strip(' \t\n\r')).translate(dict.fromkeys(map(ord, '\\/'), None))
+                if __TEST__:
+                    print ch_name
                 vol_no = None
                 ch_no = None
                 ch_title = None
@@ -221,7 +224,8 @@ for chapter in manga.chapter_list:
     if __TEST__:
         chapter.show() # For testing only
         print "Downloading chapter..."
-    chapter.downloadChapter()
+    if __DOWNLOAD__:
+        chapter.downloadChapter()
     sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
     sys.stdout.flush()
 print "\nAll done!"
