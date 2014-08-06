@@ -24,6 +24,13 @@ directory named like: "Batoto
 manga is downloaded from. The chapters are created as compressed ZIP archives
 within this folder.
 
+Once you have a few manga folders in you working directory, it's easier
+to update them all in one shot instead of running the script for each manga and entering their URLs. For
+this, you can run the script with the flag "-r" / "--reload".
+
+E.g.
+python manga-downloader.py -r
+
 *Currently Supported Sites:*
 
 1. Batoto
