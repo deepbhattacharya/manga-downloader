@@ -1,5 +1,5 @@
 ## DESIGN
-## This script takes in an URI pointing to the main page of a comic/manga/manhwa in Batoto.net
+## This script takes in an url pointing to the main page of a comic/manga/manhwa in Batoto.net
 ## It then parses the chapter links, goes to each, downloads the images for each chapter and compresses
 ## them into zip files.
 ## Alternatively, we may be able to specify a name, and have the script search for it and ask for results.
@@ -7,8 +7,8 @@
 ## Let's build the script block by block, so we may have the choice to put in a GUI later.
 
 ## FUNCTIONS
-## 1. Parsing an URI to get the chapter links
-## 1A.Confirm that an URI points to the main page of a comic
+## 1. Parsing an url to get the chapter links
+## 1A.Confirm that an url points to the main page of a comic
 ## 2. Given a chapter link, identifying all the pages
 ## 2A.Retrieve the volume number, chapter number and name of the chapter; including support for fractional and negative chapter numbers
 ## 3. Downloading the pages and compressing them
@@ -22,9 +22,12 @@ from StringIO import StringIO
 import gzip
 import shutil
 import os
+import os.path
+import glob
 import sys
 import zipfile
 import urlparse
+import argparse
 
 ## Constants
 __DOWNLOAD__ = True
@@ -32,15 +35,29 @@ __TEST__ = False
 __RETRY_URL__ = 5
 
 ## Function to compress a directory
-def zipdir(path, zip):
+def zipdir(path, zipf):
     for root, dirs, files in os.walk(path):
-        for file in files:
-            zip.write(os.path.join(root, file), arcname = os.path.basename(file))
+        for f in files:
+            zipf.write(os.path.join(root, f), arcname = os.path.basename(f))
+
+## Function to ask for URL
+def checkURLType(url_input):
+    print "Checking: " + url_input
+    url_ok = False
+    for url_type in URL_TYPES:
+        if re.compile(URL_TYPES[url_type]['url']).match(url_input):
+            print "Site supported: " + url_type
+            url_ok = True
+            break
+    if not url_ok:
+        print "URL not supported or unknown"
+        exit(1)
+    return url_type
 
 ## Function to get a webpage
 def readURL(url):
     if url[0] == '/':
-        url = uri_type + url
+        url = url_type + url
     if __TEST__:
         print "Reading url: " + url
     request = urllib2.Request(url)
@@ -50,7 +67,7 @@ def readURL(url):
             response = urllib2.urlopen(request)
             if response.info().get('Content-Encoding') == 'gzip': # Large pages are often gzipped
                 buf = StringIO(response.read())
-                data = gzip.GzipFile(fileobj=buf)
+                data = gzip.GzipFile(fileobj = buf)
             else:
                 data = response
             return data
@@ -133,7 +150,7 @@ class MangaChapterBatoto(MangaChapter):
 
     def retrieveAllPages(self):
         ## Look at the options of select element at //*[@id="page_select"]
-        ## Take the value for each (page URI) and save them
+        ## Take the value for each (page url) and save them
         webpage = readHTML(self.chapter_url)
         s = webpage.xpath("//*[@id='page_select']")[0]
         for option in s.xpath('.//option[@value]'):
@@ -152,7 +169,7 @@ class MangaChapterStarkana(MangaChapter):
 
     def retrieveAllPages(self):
         ## Look at the options of select element at //*[@id="page_select"]
-        ## Take the value for each (page URI) and save them
+        ## Take the value for each (page url) and save them
         webpage = readHTML(self.chapter_url)
         s = webpage.xpath("//*[@id='page_switch']")[0]
         for option in s.xpath('.//option[@value]'):
@@ -170,6 +187,12 @@ class Manga(object):
         self.name = manga_name
         self.url = manga_url
         self.chapter_list = []
+
+    def createFolder(self, path):
+        if not os.path.exists(ch_path):
+            os.makedirs(ch_path)
+        with open(ch_path + '/mangadl.link') as f:
+            f.write(self.url)
 
     def addMangaChapter(self, manga_chapter):
         self.chapter_list.append(manga_chapter)
@@ -196,8 +219,7 @@ class MangaBatoto(Manga):
             print "Set name to: " + self.name
         assert(self.name is not None)
         ch_path = "Batoto - " + self.name
-        if not os.path.exists(ch_path):
-            os.makedirs(ch_path)
+        self.createFolder(ch_path)
         for ch_row in webpage.xpath('//table[@class="ipb_table chapters_list"]/tbody/tr')[1:]:
             if ch_row.get('class') == 'row lang_English chapter_row':
                 ch_a = ch_row.xpath('.//td')[0].xpath('.//a')[0]
@@ -238,8 +260,7 @@ class MangaStarkana(Manga):
             print "Set name to: " + self.name
         assert(self.name is not None)
         ch_path = "Starkana - " + self.name
-        if not os.path.exists(ch_path):
-            os.makedirs(ch_path)
+        self.createFolder(ch_path)
         for ch_row in webpage.xpath('//a[@class="download-link"]'):
             ch_no = None
             ch_url = ch_row.get('href')
@@ -248,33 +269,50 @@ class MangaStarkana(Manga):
             self.addMangaChapter(MangaChapterStarkana(self.name, ch_no, ch_url, ch_path))
 
 # Data structures that help instantiating the right subclasses based on URL
-URI_TYPES = {'http://www.batoto.net' : {'uri' : '(http://)?www\.batoto\.net.+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
-            'http://www.starkana.com' : {'uri' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
+URL_TYPES = {'http://www.batoto.net' : {'url' : '(http://)?www\.batoto\.net.+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
+            'http://www.starkana.com' : {'url' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
                 }
 
-uri = raw_input("Enter URL: ")
-url_ok = False
-for uri_type in URI_TYPES:
-    if re.compile(URI_TYPES[uri_type]['uri']).match(uri):
-        print "Site supported: " + uri_type
-        url_ok = True
-        break
-if not url_ok:
-    print "URL not supported or unknown"
-    exit(1)
+# Parse command line arguments
+parser = argparse.ArgumentParser(description = 'Download manga chapters from collection sites.')
+group = parser.add_mutually_exclusive_group(required = False)
+group.add_argument('--reload', '-r', help = 'Update all manga folders in current directory', action = 'store_true')
+group.add_argument('--update', '-u', help = 'Update the manga at the url(s) provided', action = 'append')
+args = vars(parser.parse_args())
+url_list = []
 
-manga = URI_TYPES[uri_type]['manga'](uri) # Instantiate manga object
-manga.retrieveAllChapters() # Add all chapters to it
-chapter_count = len(manga.chapter_list)
-curr_download_count = 0
-for chapter in manga.chapter_list:
-    curr_download_count = curr_download_count + 1
-    if __TEST__:
-        chapter.show() # For testing only
-        print "Downloading chapter..."
-    if __DOWNLOAD__:
-        chapter.downloadChapter()
-    sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
-    sys.stdout.flush()
-print "\nAll done!"
+if args['reload']:
+    for subdir in filter(lambda f: os.path.isdir(f), glob.glob('*')):
+        if glob.glob(subdir + '/mangadl.link'):
+            with open(subdir + '/mangadl.link', 'r') as f:
+                url_list.append(f.read())
+        elif glob.glob(subdir + '/* Chapter *'):
+            url_input = raw_input("Enter URL for folder " + subdir + " (Press ENTER to skip) : ")
+            url_list.append(url_input)
+elif args['update']:
+    url_list = args['update']
+else:
+    url_input = raw_input("Enter URL: ")
+    url_list.append(url_input)
+
+url_list = filter(None, url_list)
+assert(url_list)
+
+for url in url_list:
+    url_type = checkURLType(url)
+    manga = URL_TYPES[url_type]['manga'](url) # Instantiate manga object
+    manga.retrieveAllChapters() # Add all chapters to it
+    chapter_count = len(manga.chapter_list)
+    curr_download_count = 0
+    for chapter in manga.chapter_list:
+        curr_download_count = curr_download_count + 1
+        if __TEST__:
+            chapter.show() # For testing only
+            print "Downloading chapter..."
+        if __DOWNLOAD__:
+            chapter.downloadChapter()
+        sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
+        sys.stdout.flush()
+    print "\n"
+print "Finished."
 exit(0)
