@@ -191,7 +191,7 @@ class Manga(object):
     def createFolder(self, path):
         if not os.path.exists(ch_path):
             os.makedirs(ch_path)
-        with open(ch_path + '/mangadl.link') as f:
+        with open(ch_path + '/mangadl.link', 'w') as f:
             f.write(self.url)
 
     def addMangaChapter(self, manga_chapter):
