@@ -168,7 +168,7 @@ class MangaChapterStarkana(MangaChapter):
         super(MangaChapterStarkana, self).__init__(manga_name, chapter_number, chapter_url, chapter_root_path)
 
     def retrieveAllPages(self):
-        ## Look at the options of select element at //*[@id="page_select"]
+        ## Look at the options of select element at //*[@id="page_switch"]
         ## Take the value for each (page url) and save them
         webpage = readHTML(self.chapter_url)
         s = webpage.xpath("//*[@id='page_switch']")[0]
@@ -176,7 +176,7 @@ class MangaChapterStarkana(MangaChapter):
             self.addPage(option.get('value'))
 
     def downloadPage(self, page_url, page_file_path):
-        ## Get @src attribute of element at //*[@id="comic_page"]
+        ## Get @src attribute of element at //*[@id="pic"/div/img]
         webpage = readHTML(page_url)
         img_url = webpage.xpath('//*[@id="pic"]/div/img')[0].get('src')
         downloadImage(img_url, page_file_path + "." + urlparse.urlparse(img_url).path.split('.')[-1])
@@ -197,7 +197,7 @@ class Manga(object):
     def addMangaChapter(self, manga_chapter):
         self.chapter_list.append(manga_chapter)
         if __TEST__:
-            print "Added chapter"
+            print "Added chapter " + manga_chapter.chapter_number
 
     def retrieveAllChapters(self):
         raise NotImplementedError # To be overridden in subclasses
