@@ -269,7 +269,8 @@ class MangaStarkana(Manga):
             self.addMangaChapter(MangaChapterStarkana(self.name, ch_no, ch_url, ch_path))
 
 # Data structures that help instantiating the right subclasses based on URL
-URL_TYPES = {'http://www.batoto.net' : {'url' : '(http://)?(www\.)?(bato\.to|batoto\.net).+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
+URL_TYPES = {'http://www.batoto.net' : {'url' : '(http://)?(www\.)?(batoto\.net).+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
+            'http://www.bato.to' : {'url' : '(http://)?(www\.)?(bato\.to).+-r[0-9]+', 'manga' : MangaBatoto, 'mangachapter' : MangaChapterBatoto},
             'http://www.starkana.com' : {'url' : '(http://)?(www\.)?starkana\.com/manga/[0A-Z]/.+', 'manga' : MangaStarkana, 'mangachapter' : MangaChapterStarkana}
                 }
 
