@@ -314,9 +314,10 @@ for url in url_list:
         if __DEBUG__:
             chapter.show()
         if __DOWNLOAD__:
-            print "Downloading chapter..."
+            if __DEBUG__:
+                print "\nDownloading chapter..."
             chapter.downloadChapter()
-            sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
+        sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
         sys.stdout.flush()
     print "\n"
 print "Finished."
