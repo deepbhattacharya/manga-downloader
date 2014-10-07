@@ -31,7 +31,7 @@ import argparse
 
 ## Constants
 __DOWNLOAD__ = True
-__TEST__ = False
+__DEBUG__ = False
 __RETRY_URL__ = 5
 
 ## Function to compress a directory
@@ -58,7 +58,7 @@ def checkURLType(url_input):
 def readURL(url):
     if url[0] == '/':
         url = url_type + url
-    if __TEST__:
+    if __DEBUG__:
         print "Reading url: " + url
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
@@ -125,7 +125,7 @@ class MangaChapter(object):
         if os.path.exists(zip_path):
             zipf = zipfile.ZipFile(zip_path)
             if zipf.testzip() is None:
-                if __TEST__:
+                if __DEBUG__:
                     print "Skipping chapter " + self.chapter_number
                 return
             else:
@@ -196,7 +196,7 @@ class Manga(object):
 
     def addMangaChapter(self, manga_chapter):
         self.chapter_list.append(manga_chapter)
-        if __TEST__:
+        if __DEBUG__:
             print "Added chapter " + manga_chapter.chapter_number
 
     def retrieveAllChapters(self):
@@ -208,8 +208,8 @@ class MangaBatoto(Manga):
         super(MangaBatoto, self).__init__(manga_url, manga_name)
         ## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
         self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\..+'
-        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = '^Vol\.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z-]+):?\s+(.+)'
-        self.CHAPTER_TITLE_PATTERN_NO_VOLUME = '^Ch.\s*([0-9\.vA-Za-z-]+):?\s+(.+)'
+        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = '^Vol\.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z-\(\)]+):?\s+(.+)'
+        self.CHAPTER_TITLE_PATTERN_NO_VOLUME = '^Ch.\s*([0-9\.vA-Za-z-\(\)]+):?\s+(.+)'
 
     def retrieveAllChapters(self):
         webpage = readHTML(self.url)
@@ -225,7 +225,7 @@ class MangaBatoto(Manga):
                 ch_a = ch_row.xpath('.//td')[0].xpath('.//a')[0]
                 ch_url = ch_a.get('href')
                 ch_name = unicode(ch_a.text_content().strip(' \t\n\r')).translate(dict.fromkeys(map(ord, '\\/'), None))
-                if __TEST__:
+                if __DEBUG__:
                     print ch_name
                 vol_no = None
                 ch_no = None
@@ -276,12 +276,16 @@ URL_TYPES = {'http://www.batoto.net' : {'url' : '(http://)?(www\.)?(batoto\.net)
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description = 'Download manga chapters from collection sites.')
+parser.add_argument('--Debug', '-D', help = 'Run in debug mode', action = 'store_true')
+parser.add_argument('--Test', '-T', help = 'Run in test mode (downloads suppressed)', action = 'store_true')
 group = parser.add_mutually_exclusive_group(required = False)
 group.add_argument('--reload', '-r', help = 'Update all manga folders in current directory', action = 'store_true')
 group.add_argument('--update', '-u', help = 'Update the manga at the url(s) provided', action = 'append')
 args = vars(parser.parse_args())
 url_list = []
 
+__DEBUG__ = args['Debug']
+__DOWNLOAD__ = not args['Test']
 if args['reload']:
     for subdir in filter(lambda f: os.path.isdir(f), glob.glob('*')):
         if glob.glob(subdir + '/mangadl.link'):
@@ -307,12 +311,12 @@ for url in url_list:
     curr_download_count = 0
     for chapter in manga.chapter_list:
         curr_download_count = curr_download_count + 1
-        if __TEST__:
-            chapter.show() # For testing only
-            print "Downloading chapter..."
+        if __DEBUG__:
+            chapter.show()
         if __DOWNLOAD__:
+            print "Downloading chapter..."
             chapter.downloadChapter()
-        sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
+            sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
         sys.stdout.flush()
     print "\n"
 print "Finished."
