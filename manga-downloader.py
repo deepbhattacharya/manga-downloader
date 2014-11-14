@@ -12,7 +12,6 @@
 ## 2. Given a chapter link, identifying all the pages
 ## 2A.Retrieve the volume number, chapter number and name of the chapter; including support for fractional and negative chapter numbers
 ## 3. Downloading the pages and compressing them
-## 4. Given a name, searching for it in Batoto.net and retrieving the responses.
 
 import re
 import urllib2
@@ -195,7 +194,7 @@ class Manga(object):
             f.write(self.url)
 
     def addMangaChapter(self, manga_chapter):
-        self.chapter_list.append(manga_chapter)
+        self.chapter_list.insert(0, manga_chapter)
         if __DEBUG__:
             print "Added chapter " + manga_chapter.chapter_number
 
@@ -310,15 +309,17 @@ for url in url_list:
     chapter_count = len(manga.chapter_list)
     curr_download_count = 0
     for chapter in manga.chapter_list:
-        curr_download_count = curr_download_count + 1
         if __DEBUG__:
             chapter.show()
+        sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
+        sys.stdout.flush()
         if __DOWNLOAD__:
             if __DEBUG__:
                 print "\nDownloading chapter..."
             chapter.downloadChapter()
-        sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
-        sys.stdout.flush()
+            curr_download_count = curr_download_count + 1
+    sys.stdout.write("\rDownloaded " + str(curr_download_count) + "/" + str(chapter_count) + " chapters.")
+    sys.stdout.flush()
     print "\n"
 print "Finished."
 exit(0)
