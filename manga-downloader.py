@@ -151,14 +151,24 @@ class MangaChapterBatoto(MangaChapter):
         ## Look at the options of select element at //*[@id="page_select"]
         ## Take the value for each (page url) and save them
         webpage = readHTML(self.chapter_url)
-        s = webpage.xpath("//*[@id='page_select']")[0]
-        for option in s.xpath('.//option[@value]'):
-            self.addPage(option.get('value'))
+        if webpage.xpath("//a[@href='?supress_webtoon=t']"): ## Long strip format for webtoons
+            if __DEBUG__:
+                print "Webtoon: reading in long strip format"
+            s = webpage.xpath("//div[@id='read_settings']/following-sibling::div/img")
+            for l in s:
+                self.addPage(l.get('src'))
+        else:
+            s = webpage.xpath("//*[@id='page_select']")[0]
+            for option in s.xpath('.//option[@value]'):
+                self.addPage(option.get('value'))
 
     def downloadPage(self, page_url, page_file_path):
         ## Get @src attribute of element at //*[@id="comic_page"]
-        webpage = readHTML(page_url)
-        img_url = webpage.xpath('//*[@id="comic_page"]')[0].get('src')
+        if urlparse.urlparse(page_url).path.split('.')[-1] in ['jpg', 'png']:
+            img_url = page_url
+        else:
+            webpage = readHTML(page_url)
+            img_url = webpage.xpath('//*[@id="comic_page"]')[0].get('src')
         downloadImage(img_url, page_file_path + "." + urlparse.urlparse(img_url).path.split('.')[-1])
 
 ## Subclass representing a manga chapter from Starkana
