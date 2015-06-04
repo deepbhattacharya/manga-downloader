@@ -27,6 +27,8 @@ import sys
 import zipfile
 import urlparse
 import argparse
+import unicodedata
+from string import maketrans
 
 ## Constants
 __DOWNLOAD__ = True
@@ -85,6 +87,15 @@ def downloadImage(img_url, file_path):
     with open(file_path, 'wb') as f:
         f.write(data.read())
 
+## Fuction to clean the path from problematic characters.
+def cleanPath(pathString):
+    if isinstance(pathString, unicode):
+        pathString = unicodedata.normalize('NFKD', pathString).encode('ascii', 'ignore')
+    pathString = pathString.translate(None, '\/:*?<>|')
+    transTable = maketrans("\"", "\'")
+    pathString = pathString.translate(transTable)
+    return pathString
+
 ## Generic class representing a manga chapter
 class MangaChapter(object):
     def __init__(self, manga_name, chapter_number, chapter_url, chapter_root_path, chapter_title=None, volume_number=None, group_name=None):
@@ -117,9 +128,14 @@ class MangaChapter(object):
 
     def downloadPage(self, page_url, page_file_path):
         raise NotImplementedError # To be overridden in subclasses
-
+    
     def downloadChapter(self):
-        dir_path = os.path.join(self.chapter_root_path, self.prefix)
+        pathA = cleanPath(self.chapter_root_path)
+        pathB = cleanPath(self.prefix)
+        dir_path = os.path.join(pathA, pathB)
+        if verbose:
+            print ""
+            print dir_path
         zip_path = dir_path + ".zip"
         if os.path.exists(zip_path):
             zipf = zipfile.ZipFile(zip_path)
@@ -287,6 +303,7 @@ URL_TYPES = {'http://www.batoto.net' : {'url' : '(http://)?(www\.)?(batoto\.net)
 parser = argparse.ArgumentParser(description = 'Download manga chapters from collection sites.')
 parser.add_argument('--Debug', '-D', help = 'Run in debug mode', action = 'store_true')
 parser.add_argument('--Test', '-T', help = 'Run in test mode (downloads suppressed)', action = 'store_true')
+parser.add_argument('--verbose', '-v', help = 'Enable verbose mode', action = 'store_true')
 group = parser.add_mutually_exclusive_group(required = False)
 group.add_argument('--reload', '-r', help = 'Update all manga folders in current directory', action = 'store_true')
 group.add_argument('--update', '-u', help = 'Update the manga at the url(s) provided', action = 'append')
@@ -295,6 +312,10 @@ url_list = []
 
 __DEBUG__ = args['Debug']
 __DOWNLOAD__ = not args['Test']
+if args['verbose']:
+    verbose = True
+else:
+    verbose = False
 if args['reload']:
     for subdir in filter(lambda f: os.path.isdir(f), glob.glob('*')):
         if glob.glob(subdir + '/mangadl.link'):
