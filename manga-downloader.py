@@ -233,7 +233,7 @@ class MangaBatoto(Manga):
         super(MangaBatoto, self).__init__(manga_url, manga_name)
         ## Regular expressions for parsing the chapter headings and retrieve volume number, chapter number, title etc
         self.CHAPTER_TITLE_PATTERN_CHECK_VOLUME = '^Vol\..+'
-        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = '^Vol\.\s*([0-9]+)\s*Ch.\s*([0-9\.vA-Za-z-\(\)]+):?\s+(.+)'
+        self.CHAPTER_TITLE_PATTERN_WITH_VOLUME = '^Vol\.\s*([0-9]+|Extra)\s*Ch.\s*([0-9\.vA-Za-z-\(\)]+):?\s+(.+)'
         self.CHAPTER_TITLE_PATTERN_NO_VOLUME = '^Ch.\s*([0-9\.vA-Za-z-\(\)]+):?\s+(.+)'
 
     def retrieveAllChapters(self):
